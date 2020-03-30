@@ -75,7 +75,7 @@
 #endif
 #if HOTENDS == 1
   #ifndef FAN1_PIN
-    #define FAN1_PIN                       P2_03
+    //#define FAN1_PIN                       P2_03 // Not defined because already defined in Configuration_adv.h as E0_AUTO_FAN_PIN
   #endif
 #else
   #ifndef HEATER_1_PIN
