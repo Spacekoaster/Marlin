@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -60,16 +60,11 @@ uint8_t L64XX_Marlin::dir_commands[MAX_L64XX];  // array to hold direction comma
 
 const uint8_t L64XX_Marlin::index_to_dir[MAX_L64XX] = {
   INVERT_X_DIR, INVERT_Y_DIR, INVERT_Z_DIR
-  , (INVERT_X_DIR)                            // X2
-    #if ENABLED(X_DUAL_STEPPER_DRIVERS)
-      ^ (INVERT_X2_VS_X_DIR)
-    #endif
-  , (INVERT_Y_DIR)                            // Y2
-    #if ENABLED(Y_DUAL_STEPPER_DRIVERS)
-      ^ (INVERT_Y2_VS_Y_DIR)
-    #endif
-  , INVERT_Z_DIR, INVERT_Z_DIR, INVERT_Z_DIR  // Z2,Z3,Z4
-
+  , (INVERT_X_DIR) ^ BOTH(X_DUAL_STEPPER_DRIVERS, INVERT_X2_VS_X_DIR) // X2
+  , (INVERT_Y_DIR) ^ BOTH(Y_DUAL_STEPPER_DRIVERS, INVERT_Y2_VS_Y_DIR) // Y2
+  , (INVERT_Z_DIR) ^ ENABLED(INVERT_Z2_VS_Z_DIR) // Z2
+  , (INVERT_Z_DIR) ^ ENABLED(INVERT_Z3_VS_Z_DIR) // Z3
+  , (INVERT_Z_DIR) ^ ENABLED(INVERT_Z4_VS_Z_DIR) // Z4
   , INVERT_E0_DIR, INVERT_E1_DIR, INVERT_E2_DIR, INVERT_E3_DIR
   , INVERT_E4_DIR, INVERT_E5_DIR, INVERT_E6_DIR, INVERT_E7_DIR
 };
@@ -508,7 +503,7 @@ uint8_t L64XX_Marlin::get_user_input(uint8_t &driver_count, L64XX_axis_t axis_in
   // Work on the drivers
   //
 
-  for (uint8_t k = 0; k < driver_count; k++) {
+  LOOP_L_N(k, driver_count) {
     uint8_t not_found = true;
     for (j = 1; j <= L64XX::chain[0]; j++) {
       PGM_P const str = (PGM_P)pgm_read_ptr(&index_to_axis[L64XX::chain[j]]);
@@ -923,9 +918,7 @@ void L64XX_Marlin::say_axis(const L64XX_axis_t axis, const uint8_t label/*=true*
           monitor_update(E5);
         #endif
 
-        #if ENABLED(L6470_DEBUG)
-          if (report_L6470_status) DEBUG_EOL();
-        #endif
+        if (TERN0(L6470_DEBUG, report_L6470_status)) DEBUG_EOL();
 
         spi_active = false;   // done with all SPI transfers - clear handshake flags
         spi_abort = false;
